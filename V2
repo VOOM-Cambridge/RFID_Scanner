@@ -1,0 +1,71 @@
+import json
+import csv
+from datetime import datetime
+
+def create_json(unique_str, tag, status):
+    # Get the current timestamp
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Create a dictionary with the unique string, timestamp, tag, and status
+    data = {
+        "unique_string": unique_str,
+        "timestamp": timestamp,
+        "tag": tag,
+        "status": status
+    }
+
+    # Generate a unique filename using the timestamp
+    filename = f"output_{timestamp.replace(' ', '_').replace(':', '-')}.json"
+
+    # Convert the dictionary to a JSON object and write it to a file
+    with open(filename, "w") as json_file:
+        json.dump(data, json_file, indent=4)
+
+def update_csv(unique_str, status):
+    # Check if CSV file exists
+    if not os.path.isfile('status.csv'):
+        # Create CSV file and write headers
+        with open('status.csv', 'w', newline='') as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerow(["unique_string", "status"])
+    
+    # Open CSV file and read current status
+    with open('status.csv', 'r', newline='') as csv_file:
+        reader = csv.reader(csv_file)
+        rows = list(reader)
+
+    # Search for the unique string in the CSV file
+    for row in rows:
+        if row[0] == unique_str:
+            # If found, alternate the status
+            row[1] = 'in' if row[1] == 'out' else 'out'
+            break
+    else:
+        # If not found, add a new row with status "out"
+        rows.append([unique_str, 'out'])
+
+    # Write back to the CSV file
+    with open('status.csv', 'w', newline='') as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerows(rows)
+
+    # Return the status of the unique string
+    return rows[-1][1]
+
+# Define your predefined tag
+tag = "your_predefined_tag"
+
+# Loop to keep asking for unique strings and creating new JSON files
+while True:
+    # Ask for a unique string as input
+    unique_str = input("Please enter a unique string (or 'exit' to quit): ")
+
+    # Check if the user wants to exit
+    if unique_str.lower() == 'exit':
+        break
+
+    # Update the CSV file and get the status
+    status = update_csv(unique_str)
+
+    # Call the function
+    create_json(unique_str, tag, status)
