@@ -1,0 +1,59 @@
+import json
+import sys
+import os
+import datetime
+
+STATUS_FILE = 'worker_status.json'
+TIMESTAMP_FILE = 'worker_timestamps.json'
+
+
+def toggle_status(worker_id):
+    if os.path.exists(STATUS_FILE):
+        with open(STATUS_FILE, 'r') as f:
+            worker_status = json.load(f)
+    else:
+        worker_status = {}
+
+    if worker_id in worker_status and worker_status[worker_id] == 'in':
+        worker_status[worker_id] = 'out'
+    else:
+        worker_status[worker_id] = 'in'
+
+    with open(STATUS_FILE, 'w') as f:
+        json.dump(worker_status, f)
+
+    return worker_status[worker_id]
+
+
+def record_timestamp(worker_id, tag, status):
+    timestamp = str(datetime.datetime.now())
+    record = {
+        'worker_id': worker_id,
+        'timestamp': timestamp,
+        'tag': tag,
+        'status': status
+    }
+
+    if os.path.exists(TIMESTAMP_FILE):
+        with open(TIMESTAMP_FILE, 'r') as f:
+            worker_timestamps = json.load(f)
+    else:
+        worker_timestamps = []
+
+    worker_timestamps.append(record)
+
+    with open(TIMESTAMP_FILE, 'w') as f:
+        json.dump(worker_timestamps, f)
+
+
+def main(worker_id, tag):
+    status = toggle_status(worker_id)
+    record_timestamp(worker_id, tag, status)
+
+
+if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        print('Usage: python tracker.py <worker_id> <tag>')
+        sys.exit(1)
+
+    main(sys.argv[1], sys.argv[2])
